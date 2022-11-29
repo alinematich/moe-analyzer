@@ -11,8 +11,6 @@ Classes:
 
 from model.vehicle import Vehicle
 
-
-
 class MOEAnalyzer():
     """Class responsible for the metric calculation"""
     def __init__(self, model, loader, pce, calculation_rate = 1, ):
@@ -38,7 +36,7 @@ class MOEAnalyzer():
                 self.read_entry(entry)
 
             # if elapsed time more that calculation period, time for new cycle
-            time_diff = time - self.last_cycle
+            time_diff = time + 1 - self.last_cycle
             if time_diff >= self.calc_rate:
 
 
@@ -50,7 +48,7 @@ class MOEAnalyzer():
                 self.reset_counters()
                 self.update_vehicles()
                 self.last_cycle = self.last_cycle + self.calc_rate
-
+                # print(time, int(time/300))
                 yield metrics, time
 
 
@@ -112,7 +110,7 @@ class MOEAnalyzer():
         """Execute the MOE computation for edges and sections."""
 
         # if it's not the very fist timestep
-        if self.last_cycle != 0:
+        if self.last_cycle != 0 or True:
 
 
             # iterate through edges and compute metrics

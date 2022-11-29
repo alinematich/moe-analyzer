@@ -33,11 +33,11 @@ class System():
 
         # correct total distance and ideal time for stopped cars by
         # enforcing minimum speed (default 1 m/s) per car
-        distance = max(distance, self.min_speed * time_diff)
+        distance = max(distance, self.min_speed * time_diff) #rev why minimum speed
         distance *= vehicle.multiplier
 
         self.total_dist += distance
-        self.total_ideal_time += distance / flow_speed
+        self.total_ideal_time += distance / flow_speed #rev multiplier effect
 
 
     def update_left(self, vehicle):
@@ -56,12 +56,12 @@ class System():
 
         throughput = self.v_current / time_diff
 
-        # if cars actually  passed
+        # if cars actually passed
         if self.v_current != 0 and self.total_ideal_time != 0:
 
 
             # Total Delay calculation, min speed is 1 m/s to prevent artifacts
-            total_time = time_diff * self.v_current
+            total_time = time_diff * self.v_current #rev why use min speed for total time not car speed
             total_delay = max(0, total_time - self.total_ideal_time)
 
             # Percent Incomplete Trips, Delay per Trip, Travel Time Index
@@ -73,6 +73,13 @@ class System():
                 print(self)
 
             tti = total_time / self.total_ideal_time
+            category = 0
+            if tti <= 1.5:
+                category = 1
+            elif tti <= 2.5:
+                category = 2
+            elif tti > 2.5:
+                category = 3
 
         # no cars passed, default values
         else:
@@ -81,13 +88,20 @@ class System():
             pit = 0 
             dpt = 0
             tti = 1
+            category = 0
 
         # reset counters
         self.total_dist = 0
         self.total_ideal_time = 0
 
-        self.metrics = {"pit": pit, "thr": throughput,
-            "td": total_delay, "dpt": dpt, "tti": tti}
+        self.metrics = {
+            "pit": pit, 
+            "thr": throughput,
+            "td": total_delay, 
+            "dpt": dpt, 
+            "tti": tti, 
+            # "ctg": category
+            }
 
         return self.metrics
 

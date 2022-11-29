@@ -1,6 +1,5 @@
 $(document).ready(base_load_handler)
 
-
 // function responsible for all common actions after page load
 function base_load_handler() {
     
@@ -19,18 +18,18 @@ function base_load_handler() {
 
 
 // Map object
-function Map(element='map', center=[0,0], zoom=10,
-    colors={'default': "black", 'highlighted': "red", 'selected': "blue"}) {
+function Map(element, center, zoom, colors) {
 
     //  properties
     this.element = $('#' + element)
     this.map = L.map(element, {center: center, zoom: zoom})  // map element
+
     this.lines = {}       // line objects dictionary, keyed by edge id
     this.edges = {}       // edge ids dictionary, keyed by line object id
     this.edge_groups = {} // multi-edge groups dictionary, indexed by edges
     this.colors = colors  // default/highlight/select colors
 
-    this.draw = function(edges, bounds) { 
+    this.draw = function(edges, bounds) {
     // Draw/refresh the map element
 
         // draw edges
@@ -40,7 +39,8 @@ function Map(element='map', center=[0,0], zoom=10,
             // draw line according to edge shape
             var line = L.polyline(edge.shape, {
                 color: this.colors.default,
-                weight: 1.5 * edge.lanes
+                weight: 1.5 * edge.lanes,
+                _lanes: edge.lanes
             }).addTo(this.map);
 
             // store line object and associated id
@@ -55,6 +55,13 @@ function Map(element='map', center=[0,0], zoom=10,
 
         // pan nad zoom map to fit to bounds
         this.map.fitBounds(bounds);
+
+        // L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        // attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        // }).addTo(this.map);
+
+        // L.marker([43.75683131899755,-79.53051134567808]).addTo(this.map).bindPopup("bounds").openPopup();
+
     }
 
 
@@ -127,15 +134,15 @@ function Map(element='map', center=[0,0], zoom=10,
 
         // if line is highlighted
         if (this.lines[edge_id].highlighted) {
-            this.lines[edge_id].line.setStyle({'color': this.colors.highlighted})
+            this.lines[edge_id].line.setStyle({'color': this.colors.highlighted, weight: 1.5*this.lines[edge_id].line.options._lanes + 5})
 
         // if line is selected
         } else if (this.lines[edge_id].selected) {
-            this.lines[edge_id].line.setStyle({'color': this.colors.selected})
+            this.lines[edge_id].line.setStyle({'color': this.colors.selected, weight: 1.5*this.lines[edge_id].line.options._lanes + 2.5})
 
         // if line isn't highlighted or selected
         } else {
-            this.lines[edge_id].line.setStyle({'color': this.colors.default})
+            this.lines[edge_id].line.setStyle({'color': this.colors.default, weight: 1.5*this.lines[edge_id].line.options._lanes })
         }
     }
 }

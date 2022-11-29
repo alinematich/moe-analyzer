@@ -5,6 +5,7 @@ class Junction():
     def __init__(self, junction):
 
         self.id = junction['id']
+        self.type = junction['type']
         self.internal_edges = {lane.rpartition('_')[0]
             for lane in junction['intLanes'].split()}
 
@@ -76,7 +77,7 @@ class Shape():
 
     def transform(self, old, new):
         """Transform the shape points from one rectangle space to another."""
-
+        
         # create a copy of this Shape and loop through its points
         new_shape = copy.deepcopy(self)
         for index, (x, y) in enumerate(self.points):

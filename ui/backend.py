@@ -1,4 +1,4 @@
-import sys, os, json
+import sys, os, json, functools, numpy as np
 from flask import Flask, render_template, request
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -107,22 +107,34 @@ def metrics():
         "bus": float(parameters['pce_bus']),
         "taxi": float(parameters['pce_taxi']),
         "other": float(parameters['pce_other'])}
+
     loader = XmlDataLoader(os.path.join(root, parameters['simulation']))
     analyzer = MOEAnalyzer(model, loader, pce, float(parameters['obs_rate']))
+    details, edges, paths, groups = load_model(model)
 
+    # wanted=[[],[],[]]
+    # wantedname = 'inter_8'
+    # for g in groups:
+    #     if g[1]['name'] == wantedname:
+    #         wanted[2] += [g[0]]
+    #         wanted[0] = g[1]['edges'].split(',')
+    #     if g[1]['name'].startswith(wantedname+'_'):
+    #         wanted[2] += [g[0]]
+        
 
     history = {0: {}, 1: {}, 2: {}}
     times = []
 
+    cnt=0
     # go through entire observation time, calculate metrics and store them
     for metrics, time in analyzer.get_next_metrics():
-
+        print('Metrics backend '+str(cnt))
+        cnt+=1
         # perform this for edges, paths and groups
         for i in [0, 1, 2]:
-        
             # store system metric results keyed by system id then by metric
             for _id, values in metrics[i].items():
-                
+                # if _id in wanted[i]:
                 # if adding this system for the first time, add metric lists
                 if _id not in history[i]:
                     history[i][_id] = {}
@@ -150,13 +162,46 @@ def metrics():
     # self.db.insert(edge_metrics, path_metrics, group_metrics)
 
     # load model and metric details for display
-    details, edges, paths, groups = load_model(model)
+    
     metrics = {
         "pit": "Percent incomplete trips",
         "thr": "Throughput",
         "td": "Total Delay",
         "dpt": "Delay per trip",
-        "tti": "Travel time index"}
+        "tti": "Travel time index",
+        # "ctg": "Congestion class"
+        }
+
+
+    # arr=[]
+    # inter_id=27
+    # arr+=[[inter_id]+list(map(lambda a: a["y"], json.loads(history[2][inter_id])['tti']))]
+    # arr+=[([id]+list(map(lambda a: a["y"], json.loads(history[0][id])['tti']))) for id in groups[27][1]['edges'].split(',')]
+    # np.savetxt("foo.csv", arr, delimiter=",", fmt="%s", comments='', header="id, "+json.dumps(list(map(lambda a: a["x"], json.loads(history[2][0])['tti'])))[1:-1])
+
+    # for intersection, val in history[2].items():
+    #     arr+=[[intersection]+list(map(lambda a: a["y"], json.loads(val)['tti']))]
+
+
+    # for k,v in mydict.items():
+    #     if k == "AGATC":
+
+ 
+    # for inter in groups:
+    #     if inter[1]['name'].startswith(wantedname) and '_' not in inter[1]['name'][6:]:
+    #         inter_id=inter[0]
+    #         arr=[]
+    #         arr+=[[inter[1]['name']]+list(map(lambda a: a["y"], json.loads(history[2][inter_id])['tti']))]
+    #         print(len(arr[0])-1)
+    #         for path in groups:
+    #             if path[1]['name'].startswith(inter[1]['name']+'_'):
+    #                 path_id=path[0]
+    #                 arr+=[[path[1]['name']]+list(map(lambda a: a["y"], json.loads(history[2][path_id])['tti']))]
+    #         arr+=[([id]+list(map(lambda a: a["y"], json.loads(history[0][id])['tti']))) for id in groups[inter_id][1]['edges'].split(',')]
+    #         np.savetxt("predict/output/_"+inter[1]['name']+".csv", arr, delimiter=",", fmt="%s", comments='', header="id, "+json.dumps(list(map(lambda a: a["x"], json.loads(history[2][inter_id])['tti'])))[1:-1])
+
+
+    
 
     return render_template('metrics.html',
         metrics=metrics,
@@ -250,7 +295,7 @@ def load_model(model):
         }
 
     # sort paths by the order provided, get as list of tuples
-    groups = sorted(groups_dict.items(), key=lambda x: x[1]['order'])
+    groups = sorted(groups_dict.items())#, key=lambda x: x[1]['order'])
 
     # general model details
     details = {
@@ -265,4 +310,4 @@ def load_model(model):
 
 
 if __name__ == "__main__":
-    app.run(host= '0.0.0.0')
+    app.run(host= '0.0.0.0', port=8000)

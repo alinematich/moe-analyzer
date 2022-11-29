@@ -26,6 +26,10 @@ function config_load_handler() {
 
         // read edges and draw the road network map
         edges_bounds = read_edges()
+
+        // alert('hi')
+        // console.log(edges_bounds[0])
+
         map.draw(edges_bounds[0], edges_bounds[1])
 
         // set the table's behavior
@@ -527,7 +531,6 @@ function load_metrics(){
         'pce_other': $("#pce_other").val(),
         'hide_internals': $("#hide_internals").is(":checked")},
         function( data ) {
-
             var data = data.replace('<body', '<body><div id="body"')
                 .replace('</body>','</div></body>');
             var body = $(data).filter('#body');

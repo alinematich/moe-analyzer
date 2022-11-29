@@ -112,7 +112,7 @@ function draw_charts(beta){
         var edge_id = $(this).attr("data-edge-id")
         var dataset = JSON.parse($(this).attr("data-edge-metrics"))
 
-        draw_chart(edge_id, dataset, margin, width, height, xScale, beta)        
+        draw_chart(edge_id, dataset, margin, width, height, xScale, beta)
     })
 
     // draw all path charts
@@ -124,14 +124,14 @@ function draw_charts(beta){
 
         draw_chart(path_id, dataset, margin, width, height, xScale, beta)
     })
-
+    var cnt = 0;
     // draw all group charts
     $("tr.group").each(function(){
 
         // get the id and metric values for this group
         var group_id = $(this).attr("data-group-id")
         var dataset = JSON.parse($(this).attr("data-group-metrics"))
-
+        console.log(cnt++)
         draw_chart(group_id, dataset, margin, width, height, xScale, beta)        
     })
 
@@ -185,13 +185,106 @@ function draw_chart(system_id, dataset, margin, width, height, xScale, beta){
         // Create Y axis component
         svg.append("g")
             .attr("class", "y axis")
-            .call(d3.axisLeft(yScale).ticks(5));
+            .call(d3.axisLeft(yScale).ticks(5));      
 
         // Append the path, bind the data, and call the line generator 
         svg.append("path")
             .datum(dataset[metric])
             .attr("class", "line")
             .attr("d", line);
+
+        
     });
 
+}
+
+
+
+
+function draw_chart2(system_id, dataset, margin, width, height, xScale, beta){
+
+    // get all the individual metrics
+    Object.keys(dataset).forEach(function(metric) {
+
+        let data = dataset[metric];
+        var xScale = d3.scaleBand()
+        .domain(data.map(function(d){
+            return d["x"]
+        })) // input
+        .range([0, width]); // output
+
+        var peak = Math.max(...data.map(function(d){
+            return d["y"]
+        }))
+
+        // Y scale will is based on maximum values
+        var yScale = d3.scaleLinear()
+            .domain([0, peak]) // input 
+            .range([height, 0]); // output
+
+        // clear previous svg if it exists
+        d3.selectAll(".graph-panel")
+        .filter('[data-system-id="'+system_id+'"]')
+        .select(".graph."+metric)
+        .select("svg").remove()
+
+        // Create the main svg element for the chart
+        var svg = d3.selectAll(".graph-panel")
+            .filter('[data-system-id="'+system_id+'"]')
+            .select(".graph."+metric)
+            .append("svg")
+                .attr("width", width)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")")
+
+        // Create X axis component
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(xScale)
+            // .tickValues(xScale.domain().filter(function(d, i) { return i%(12*24) == 0 }))
+            // .tickFormat((d,i)=>(i))
+            );
+
+        // Create Y axis component
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(d3.axisLeft(yScale).ticks(5));
+                
+        // // Create rectangles
+        let bars = svg.selectAll(".bar")
+            .data(data.map(function(d){
+                return d["y"]
+            }))
+            .enter()
+            .append("g")
+            // .attr("transform", function(d, i) {
+            //     return "translate(" + (i * xScale.bandwidth()+0.1) + ","+(height - yScale(d))+")";
+            // });
+        
+        bars.append('rect')
+            .attr('class', 'bar')
+            .attr("x", function(d,i) { return i * xScale.bandwidth()+0.1; })
+            .attr("y", function(d,i) { return height - yScale(d); })
+            .attr("width", xScale.bandwidth()-0.2)
+            .attr("height", function(d) { return yScale(d); });
+            
+        // bars.append("text")
+        //     .text(function(d) {
+        //         return data[d];
+        //     })
+        //     .attr("x", function(d){
+        //         return x(d) + x.bandwidth()/2;
+        //     })
+        //     .attr("y", function(d){
+        //         return y(data[d]) - 5;
+        //     })
+        //     .attr("font-family" , "sans-serif")
+        //     .attr("font-size" , "14px")
+        //     .attr("fill" , "black")
+        //     .attr("text-anchor", "middle");
+        
+    });
 }
